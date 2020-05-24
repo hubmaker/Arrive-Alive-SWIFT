@@ -11,14 +11,13 @@ import UIKit
 class Start_ViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
     let ad = UIApplication.shared.delegate as? AppDelegate
     var start = [""]
+    var selectRow = 0
     
     override func viewWillAppear(_ animated: Bool) {
         if let get_station = ad?.paramStation {
             start = get_station
         }
     }
-    
-    var selectRow = 0
     
     @IBOutlet weak var start_picker: UIPickerView!
     
@@ -32,14 +31,18 @@ class Start_ViewController: UIViewController, UIPickerViewDelegate, UIPickerView
         return 1
     }
     
-    public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return start.count
     }
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        selectRow = row
         return start[row]
     }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectRow = row
+    }
+
     @IBAction func start_nextButton(_ sender: Any) {
         ad?.paramStart = start[selectRow]
         self.presentingViewController?.dismiss(animated: true)
