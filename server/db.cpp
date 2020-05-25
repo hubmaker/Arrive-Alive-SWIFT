@@ -1,8 +1,4 @@
-﻿// pch.cpp: 미리 컴파일된 헤더에 해당하는 소스 파일입니다. 성공하려면 컴파일이 필요합니다.
-
 #include "db.h"
-
-
 
 DB::DB() : connection(NULL) {};
 DB::DB(const char* host, const char* user, const char* passwd, const char* db) {
@@ -30,16 +26,9 @@ bool DB::exit_db() {
 	}
 	return false;
 }
-std::string DB::search(const char* table, int args, ...) {
-	std::string tmp = "select *from ", result_str;
-	tmp = tmp + table + " where ";
-	va_list ap;
-	va_start(ap, args);
-	for (int i = 0; i < args - 1; i++) {
-		tmp = tmp + va_arg(ap, const char*) + ", ";
-	}
-	tmp = tmp + va_arg(ap, const char*) + ");";
-	va_end(ap);
+std::string DB::search_line(const char* line) {
+	std::string tmp = "select sname from station where cid=0 and lid=", result_str;
+	tmp = tmp + line[0];
 	std::lock_guard<std::mutex> guard(DB_mtx);
 	if ((query_stat = mysql_query(connection, tmp.c_str())) != 0) {
 		std::cout << "Mysql 에러 : " << mysql_error(&conn) << std::endl;
@@ -54,12 +43,34 @@ std::string DB::search(const char* table, int args, ...) {
 	int num_fields = mysql_num_fields(sql_result);
 	while ((sql_row = mysql_fetch_row(sql_result)) != NULL) {
 		for (int i = 0; i < num_fields; i++)
-			result_str = result_str + sql_row[i] + " ";
-
-		
+			result_str = result_str + sql_row[i] + "@";
 	}
 	mysql_free_result(sql_result);
-	
-
 	return result_str;
+}
+int DB::get_station_inteval(const char *line, const char* s, const char* e) {
+	std::string tmp;
+	
+	std::lock_guard<std::mutex> guard(DB_mtx);
+	if ((query_stat = mysql_query(connection, tmp.c_str())) != 0) {
+		std::cout << "Mysql 에러 : " << mysql_error(&conn) << std::endl;
+		DB_mtx.unlock();
+		return NULL;
+	}
+	if ((sql_result = mysql_store_result(connection)) == NULL) {
+		std::cout << "Mysql 에러 : " << mysql_error(&conn) << std::endl;
+		DB_mtx.unlock();
+		return NULL;
+	}
+}
+
+DB *database;
+
+bool init_db() {
+	database = &DB(HOST, USER, PASSWORD, DB_NAME);
+	if (!database->class_stat) {
+		return false;
+	}
+		
+	return true;
 }
